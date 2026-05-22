@@ -37,10 +37,10 @@ BANNER = r"""
  [bold grey]GITPULSE - Analitik Aktivitas & Karakter Developer GitHub[/bold grey]
 """
 
-# MOCK DATA FOR DEMO MODE (User A: ivankafi03)
+# MOCK DATA FOR DEMO MODE (User A)
 MOCK_PROFILE = {
-    "login": "ivankafi03",
-    "name": "Ivan Kafi Pradana",
+    "login": "dev_pratama",
+    "name": "Developer Pratama",
     "bio": "Full Stack Developer | Building elegant digital experiences & premium web apps",
     "location": "Indonesia",
     "public_repos": 14,
@@ -861,7 +861,7 @@ def main():
             
     if args.compare:
         user1, user2 = args.compare
-        if args.mock or (user1.lower() == "ivankafi03" and user2.lower() == "rivaldi01"):
+        if args.mock or (user1.lower() == "dev_pratama" and user2.lower() == "rivaldi01"):
             stats1 = {"profile": MOCK_PROFILE, "repos": MOCK_REPOS, "events": MOCK_EVENTS}
             stats2 = {"profile": MOCK_PROFILE_B, "repos": MOCK_REPOS_B, "events": MOCK_EVENTS_B}
             is_mock = True
