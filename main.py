@@ -195,7 +195,7 @@ def generate_statistics(repos, events):
         except Exception:
             continue
     total_days_activity = sum(weekday_counts.values())
-    weekday_percentages = {day: (count / total_days_activity) * 100 if total_days_activity > 0 else 0.0 for day, count in weekday_counts.items()}
+    weekday_percentages = {day: (count, (count / total_days_activity) * 100 if total_days_activity > 0 else 0.0) for day, count in weekday_counts.items()}
     
     # 5. Top Repositories with custom status
     valid_repos = []
@@ -234,13 +234,11 @@ def generate_contribution_grid(events):
     today = date.today()
     num_weeks = 20
     
-    # Calculate starting date aligned to Sunday 20 weeks ago
-    days_to_subtract = num_weeks * 7
-    start_date = today - timedelta(days=days_to_subtract)
-    start_weekday = start_date.weekday()
-    if start_weekday != 6:  # If not Sunday (python weekday: Mon=0...Sun=6)
-        start_date = start_date - timedelta(days=start_weekday + 1)
-        
+    # Calculate starting date aligned to Sunday 20 weeks ago, including current week in the last column
+    days_since_sunday = (today.weekday() + 1) % 7
+    current_week_sunday = today - timedelta(days=days_since_sunday)
+    start_date = current_week_sunday - timedelta(weeks=num_weeks - 1)
+    
     grid = [[0 for _ in range(num_weeks)] for _ in range(7)]
     
     # Parse event dates and count contributions
@@ -296,7 +294,26 @@ def generate_contribution_grid(events):
                 row_str += "[bold white]█[/bold white] "
         grid_rows.append(row_str)
         
-    return month_row, grid_rows
+    # Calculate summary statistics for daily and weekly activity
+    total_contributions = sum(sum(row) for row in grid)
+    rata_mingguan = total_contributions / num_weeks
+    rata_harian = total_contributions / (num_weeks * 7)
+    
+    weekdays_full = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"]
+    row_sums = [sum(grid[r]) for r in range(7)]
+    max_row_idx = row_sums.index(max(row_sums)) if total_contributions > 0 else 0
+    hari_teraktif_nama = weekdays_full[max_row_idx] if total_contributions > 0 else "N/A"
+    hari_teraktif_count = row_sums[max_row_idx] if total_contributions > 0 else 0
+    
+    summary_stats = {
+        "total": total_contributions,
+        "rata_mingguan": rata_mingguan,
+        "rata_harian": rata_harian,
+        "hari_teraktif": hari_teraktif_nama,
+        "hari_teraktif_count": hari_teraktif_count
+    }
+    
+    return month_row, grid_rows, summary_stats
 
 
 def get_developer_persona(activity_counter, hour_percentages):
@@ -402,10 +419,10 @@ def render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekda
     # Row 2: Weekly Rhythm Panel (Left)
     weekly_text = Text()
     weekly_text.append("Ritme Aktivitas Harian (Senin - Minggu):\n", style="bold white")
-    for day, pct in weekday_percentages.items():
+    for day, (count, pct) in weekday_percentages.items():
         bar_len = int(pct / 10)
         bar = "█" * bar_len + "░" * (10 - bar_len)
-        weekly_text.append(f"  {day:<8} {bar} {pct:.1f}%\n", style="green")
+        weekly_text.append(f"  {day:<8} {bar} {count:>3} kontribusi ({pct:.1f}%)\n", style="green")
         
     weekly_panel = Panel(
         weekly_text,
@@ -435,13 +452,17 @@ def render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekda
     console.print()
     
     # Row 3: Contribution Calendar Grid Panel (Full Width)
-    month_row, grid_rows = generate_contribution_grid(events)
+    month_row, grid_rows, summary_stats = generate_contribution_grid(events)
     grid_text = Text()
     grid_text.append(f"{month_row}\n", style="bold white")
     for r in grid_rows:
         grid_text.append(Text.from_markup(f"{r}\n"))
     legend = "\n      Skala Kontribusi: [grey37]░[/grey37] 0 | [cyan]▒[/cyan] 1-2 | [bold cyan]▓[/bold cyan] 3-5 | [bold white]█[/bold white] 6+"
     grid_text.append(Text.from_markup(legend))
+    
+    # Add beautiful summary statistics text inside the panel
+    stats_summary = f"\n\n      Ringkasan Kontribusi: Total {summary_stats['total']} kontribusi | Rata-rata Mingguan: {summary_stats['rata_mingguan']:.1f} | Rata-rata Harian: {summary_stats['rata_harian']:.2f} | Hari Teraktif: {summary_stats['hari_teraktif']} ({summary_stats['hari_teraktif_count']} kontribusi)"
+    grid_text.append(Text.from_markup(f"[bold cyan]{stats_summary}[/bold cyan]"))
     
     grid_panel = Panel(
         grid_text,
@@ -668,7 +689,7 @@ def export_markdown_report(username, profile, sorted_langs, hour_percentages, so
         active_hour = sorted(hour_percentages.items(), key=lambda x: x[1], reverse=True)[0][0]
 
     # Generate flat clean contribution grid text for markdown
-    month_row, grid_rows = generate_contribution_grid(events)
+    month_row, grid_rows, summary_stats = generate_contribution_grid(events)
     clean_month_row = strip_rich_tags(month_row)
     clean_grid_rows = [strip_rich_tags(r) for r in grid_rows]
     
@@ -724,6 +745,12 @@ Laporan Analitik Aktivitas GitHub Otomatis yang Dihasilkan pada {datetime.now().
 ```text
 {grid_markdown_block}
 ```
+
+### Ringkasan Aktivitas Kalender:
+- **Total Kontribusi Terdeteksi:** {summary_stats['total']} kontribusi
+- **Rata-rata Kontribusi Mingguan:** {summary_stats['rata_mingguan']:.1f}
+- **Rata-rata Kontribusi Harian:** {summary_stats['rata_harian']:.2f}
+- **Hari Teraktif:** {summary_stats['hari_teraktif']} ({summary_stats['hari_teraktif_count']} kontribusi)
 
 ---
 
