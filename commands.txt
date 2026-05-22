@@ -1,0 +1,19 @@
+Daftar Perintah Menjalankan GitPulse CLI
+
+1. Menjalankan Menu Prompt Interaktif (Sangat Direkomendasikan):
+   python main.py
+
+2. Menganalisis Akun GitHub Tertentu secara Langsung:
+   python main.py --username username_anda
+
+3. Menganalisis dengan Token Akses GitHub (Untuk Menghindari Rate Limit API):
+   python main.py --username username_anda --token TOKEN_AKSES_GITHUB_ANDA
+
+4. Membandingkan Dua Akun GitHub secara Berdampingan (Compare Mode):
+   python main.py --compare username_pertama username_kedua
+
+5. Menjalankan Uji Coba Demo Instan Tunggal (Mock Mode):
+   python main.py --mock
+
+6. Menjalankan Uji Coba Demo Perbandingan Instan (Mock Compare Mode):
+   python main.py --compare username_pertama username_kedua --mock

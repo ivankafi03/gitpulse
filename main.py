@@ -11,6 +11,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.align import Align
 from rich.text import Text
 from rich.prompt import Prompt
+from rich import box
 
 # Ensure standard output supports UTF-8, especially on Windows terminals
 if sys.stdout.encoding != 'utf-8':
@@ -24,7 +25,7 @@ if sys.stdout.encoding != 'utf-8':
 # Initialize Rich Console
 console = Console()
 
-# ASCII Banner
+# ASCII Banner (Emoji-Free, Indonesian Subtitle)
 BANNER = r"""
  [bold cyan]  _____ _ _   _____       _     [/bold cyan]
  [bold cyan] / ____(_) | |  __ \     | |    [/bold cyan]
@@ -32,10 +33,10 @@ BANNER = r"""
  [bold cyan]| | |_ | | __|  ___/ | | | |/ __/ _ \\[/bold cyan]
  [bold cyan]| |__| | | |_| |   | |_| | | (_|  __/[/bold cyan]
  [bold cyan] \_____|_|\__|_|    \__,_|_|\___\___|[/bold cyan]
- [bold grey]GITPULSE - GitHub Activity Visualizer & Persona Analyzer[/bold grey]
+ [bold grey]GITPULSE - Analitik Aktivitas & Karakter Developer GitHub[/bold grey]
 """
 
-# MOCK DATA FOR DEMO MODE
+# MOCK DATA FOR DEMO MODE (User A: ivankafi03)
 MOCK_PROFILE = {
     "login": "ivankafi03",
     "name": "Ivan Kafi Pradana",
@@ -48,21 +49,49 @@ MOCK_PROFILE = {
 }
 
 MOCK_REPOS = [
-    {"name": "undangan-digital", "language": "TypeScript", "stargazers_count": 12, "forks_count": 4},
-    {"name": "fikadigi-store", "language": "TypeScript", "stargazers_count": 8, "forks_count": 2},
-    {"name": "gitpulse", "language": "Python", "stargazers_count": 5, "forks_count": 1},
-    {"name": "python-basics", "language": "Python", "stargazers_count": 2, "forks_count": 0},
-    {"name": "simple-portfolio", "language": "HTML", "stargazers_count": 1, "forks_count": 0},
+    {"name": "undangan-digital", "language": "TypeScript", "stargazers_count": 12, "forks_count": 4, "pushed_at": "2026-05-22T19:20:00Z"},
+    {"name": "fikadigi-store", "language": "TypeScript", "stargazers_count": 8, "forks_count": 2, "pushed_at": "2026-05-20T10:00:00Z"},
+    {"name": "gitpulse", "language": "Python", "stargazers_count": 5, "forks_count": 1, "pushed_at": "2026-05-22T20:00:00Z"},
+    {"name": "python-basics", "language": "Python", "stargazers_count": 2, "forks_count": 0, "pushed_at": "2025-11-15T08:30:00Z"},
+    {"name": "simple-portfolio", "language": "HTML", "stargazers_count": 1, "forks_count": 0, "pushed_at": "2024-05-01T12:00:00Z"},
 ]
 
 MOCK_EVENTS = [
-    {"type": "PushEvent", "created_at": "2026-05-22T23:15:00Z", "payload": {"commits": [{"message": "feat: add dynamic sitemap and robots.txt"}]}},
-    {"type": "PushEvent", "created_at": "2026-05-22T22:45:00Z", "payload": {"commits": [{"message": "design: align member login with premium glassmorphism theme"}]}},
-    {"type": "PushEvent", "created_at": "2026-05-22T19:20:00Z", "payload": {"commits": [{"message": "fix: resolve pre-hydration logo layout flash"}]}},
-    {"type": "PushEvent", "created_at": "2026-05-22T02:10:00Z", "payload": {"commits": [{"message": "refactor: optimize nodemailer transport tls config"}]}},
-    {"type": "IssuesEvent", "created_at": "2026-05-21T15:30:00Z", "payload": {"action": "opened"}},
-    {"type": "PullRequestEvent", "created_at": "2026-05-20T10:15:00Z", "payload": {"action": "opened"}},
-    {"type": "WatchEvent", "created_at": "2026-05-19T14:20:00Z"},
+    {"type": "PushEvent", "created_at": "2026-05-22T15:15:00Z", "payload": {"commits": [{"message": "feat: add dynamic sitemap and robots.txt"}]}},
+    {"type": "PushEvent", "created_at": "2026-05-22T14:45:00Z", "payload": {"commits": [{"message": "design: align member login with premium glassmorphism theme"}]}},
+    {"type": "PushEvent", "created_at": "2026-05-22T13:20:00Z", "payload": {"commits": [{"message": "fix: resolve pre-hydration logo layout flash"}]}},
+    {"type": "PushEvent", "created_at": "2026-05-21T02:10:00Z", "payload": {"commits": [{"message": "refactor: optimize nodemailer transport tls config"}]}},
+    {"type": "PushEvent", "created_at": "2026-05-20T22:30:00Z", "payload": {"commits": [{"message": "feat: complete invitation email flow"}]}},
+    {"type": "IssuesEvent", "created_at": "2026-05-19T15:30:00Z", "payload": {"action": "opened"}},
+    {"type": "PullRequestEvent", "created_at": "2026-05-18T10:15:00Z", "payload": {"action": "opened"}},
+    {"type": "WatchEvent", "created_at": "2026-05-17T14:20:00Z"},
+]
+
+# MOCK DATA FOR USER B (rivaldi01) - For Compare Mode Offline Demo
+MOCK_PROFILE_B = {
+    "login": "rivaldi01",
+    "name": "Rivaldi Suryanegara",
+    "bio": "Backend Engineer | Go & Python enthusiast | Cloud Architect",
+    "location": "Bandung, Indonesia",
+    "public_repos": 22,
+    "followers": 75,
+    "following": 40,
+    "created_at": "2020-04-12T10:15:00Z",
+}
+
+MOCK_REPOS_B = [
+    {"name": "go-grpc-microservice", "language": "Go", "stargazers_count": 42, "forks_count": 12, "pushed_at": "2026-05-20T12:00:00Z"},
+    {"name": "python-data-pipeline", "language": "Python", "stargazers_count": 15, "forks_count": 5, "pushed_at": "2026-05-18T10:00:00Z"},
+    {"name": "kubernetes-configs", "language": "Shell", "stargazers_count": 8, "forks_count": 2, "pushed_at": "2026-05-10T08:00:00Z"},
+    {"name": "redis-caching-layer", "language": "Go", "stargazers_count": 5, "forks_count": 1, "pushed_at": "2025-12-15T15:00:00Z"},
+]
+
+MOCK_EVENTS_B = [
+    {"type": "PushEvent", "created_at": "2026-05-22T21:00:00Z", "payload": {"commits": [{"message": "fix: resolve grpc interceptor context propagation"}]}},
+    {"type": "PullRequestEvent", "created_at": "2026-05-21T08:30:00Z", "payload": {"action": "opened"}},
+    {"type": "IssuesEvent", "created_at": "2026-05-20T14:15:00Z", "payload": {"action": "opened"}},
+    {"type": "PushEvent", "created_at": "2026-05-19T23:30:00Z", "payload": {"commits": [{"message": "feat: integrate prometheus metrics"}]}},
+    {"type": "PushEvent", "created_at": "2026-05-19T22:45:00Z", "payload": {"commits": [{"message": "refactor: simplify redis connection pool"}]}},
 ]
 
 
@@ -103,7 +132,7 @@ def generate_statistics(repos, events):
     languages = [r["language"] for r in repos if isinstance(r, dict) and r.get("language")]
     lang_counter = Counter(languages)
     total_langs = sum(lang_counter.values())
-    lang_percentages = {lang: (count / total_langs) * 100 for lang, count in lang_counter.items()}
+    lang_percentages = {lang: (count / total_langs) * 100 for lang, count in lang_counter.items()} if total_langs > 0 else {}
     sorted_langs = sorted(lang_percentages.items(), key=lambda x: x[1], reverse=True)[:5]
     
     # 2. Activity Counter
@@ -132,21 +161,55 @@ def generate_statistics(repos, events):
             hour_categories["Malam (22-05)"] += 1
             
     total_hours = sum(hour_categories.values())
-    hour_percentages = {cat: (count / total_hours) * 100 if total_hours > 0 else 0 for cat, count in hour_categories.items()}
+    hour_percentages = {cat: (count / total_hours) * 100 if total_hours > 0 else 0.0 for cat, count in hour_categories.items()}
     
-    # 4. Top Repositories Analysis
+    # 4. Weekly Rhythm Analysis
+    weekdays = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+    weekday_counts = {day: 0 for day in weekdays}
+    for e in events:
+        try:
+            created_at = e.get("created_at")
+            if not created_at:
+                continue
+            dt = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%SZ")
+            day_name = weekdays[dt.weekday()]
+            weekday_counts[day_name] += 1
+        except Exception:
+            continue
+    total_days_activity = sum(weekday_counts.values())
+    weekday_percentages = {day: (count / total_days_activity) * 100 if total_days_activity > 0 else 0.0 for day, count in weekday_counts.items()}
+    
+    # 5. Top Repositories with custom status
     valid_repos = []
     for r in repos:
         if isinstance(r, dict) and "name" in r:
             valid_repos.append(r)
             
+    # Sort repos by stars, forks, size
     sorted_repos = sorted(
         valid_repos,
         key=lambda x: (x.get("stargazers_count", 0), x.get("forks_count", 0), x.get("size", 0)),
         reverse=True
-    )[:3]
+    )[:5] # Display top 5 in table
     
-    return sorted_langs, activity_counter, hour_percentages, sorted_repos
+    # Add activity status to repos
+    for r in sorted_repos:
+        pushed_at_str = r.get("pushed_at") or r.get("updated_at")
+        repo_status = "Stabil"
+        if pushed_at_str:
+            try:
+                push_yr = int(pushed_at_str[:4])
+                if push_yr >= 2026:
+                    repo_status = "Sangat Aktif"
+                elif push_yr >= 2025:
+                    repo_status = "Aktif"
+                else:
+                    repo_status = "Arsip"
+            except Exception:
+                pass
+        r["activity_status"] = repo_status
+    
+    return sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos
 
 
 def get_developer_persona(activity_counter, hour_percentages):
@@ -182,57 +245,57 @@ def get_developer_persona(activity_counter, hour_percentages):
     return status, persona
 
 
-def render_tui(profile, sorted_langs, activity_counter, hour_percentages, sorted_repos, status, persona, is_mock):
+def render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos, status, persona, is_mock):
     # Header Banner
     console.print(Align.center(BANNER))
     if is_mock:
-        console.print(Align.center("[bold yellow][DEMO MODE - MOCK DATA][/bold yellow]\n"))
+        console.print(Align.center("[bold yellow][MODE DEMO - DATA MOCK][/bold yellow]\n"))
     
-    # Profile Panel (Left)
+    # Row 1: Profile Panel (Left)
     profile_text = Text()
-    profile_text.append("Nama: ", style="bold cyan")
+    profile_text.append("Nama Lengkap : ", style="bold cyan")
     profile_text.append(f"{profile.get('name') or 'N/A'}\n")
-    profile_text.append("Username: ", style="bold cyan")
+    profile_text.append("Username     : ", style="bold cyan")
     profile_text.append(f"@{profile.get('login')}\n")
-    profile_text.append("Lokasi: ", style="bold cyan")
+    profile_text.append("Lokasi       : ", style="bold cyan")
     profile_text.append(f"{profile.get('location') or 'N/A'}\n")
-    profile_text.append("Bio: ", style="bold cyan")
-    profile_text.append(f"{profile.get('bio') or 'No Bio'}\n\n")
-    profile_text.append("Followers: ", style="bold green")
-    profile_text.append(f"{profile.get('followers')}   ")
-    profile_text.append("Following: ", style="bold green")
-    profile_text.append(f"{profile.get('following')}\n")
-    profile_text.append("Repositori Publik: ", style="bold green")
-    profile_text.append(f"{profile.get('public_repos')}\n\n")
+    profile_text.append("Bio          : ", style="bold cyan")
     
-    profile_text.append("Repositori Terpopuler:\n", style="bold white")
-    if sorted_repos:
-        for idx, r in enumerate(sorted_repos, 1):
-            lang_str = f" ({r.get('language')})" if r.get('language') else ""
-            profile_text.append(f"  {idx}. {r.get('name')}{lang_str}\n", style="cyan")
-            profile_text.append(f"     [Stars: {r.get('stargazers_count', 0)} | Forks: {r.get('forks_count', 0)}]\n", style="grey70")
-    else:
-        profile_text.append("  Tidak ada repositori publik ditemukan.\n", style="grey70")
-        
+    bio = profile.get('bio') or 'Tidak ada bio.'
+    if len(bio) > 80:
+        bio = bio[:77] + "..."
+    profile_text.append(f"{bio}\n\n")
+    
+    profile_text.append("Pengikut (Followers) : ", style="bold white")
+    profile_text.append(f"{profile.get('followers')}   ", style="cyan")
+    profile_text.append("Mengikuti (Following): ", style="bold white")
+    profile_text.append(f"{profile.get('following')}\n", style="cyan")
+    profile_text.append("Repositori Publik    : ", style="bold white")
+    profile_text.append(f"{profile.get('public_repos')}\n", style="cyan")
+    
     profile_panel = Panel(
         profile_text,
         title="[bold white]Ringkasan Profil[/bold white]",
         border_style="cyan",
-        height=17
+        box=box.ROUNDED,
+        height=12
     )
     
-    # Languages & Active Hours Panel (Right)
+    # Row 1: Coding Analytics Panel (Right)
     right_text = Text()
     
     # Languages Bar Chart
     right_text.append("Bahasa Pemrograman Teratas:\n", style="bold white")
-    for lang, pct in sorted_langs:
-        bar_len = int(pct / 10)
-        bar = "█" * bar_len + "░" * (10 - bar_len)
-        right_text.append(f"  {lang:<12} {bar} {pct:.1f}%\n", style="cyan")
+    if sorted_langs:
+        for lang, pct in sorted_langs[:3]:
+            bar_len = int(pct / 10)
+            bar = "█" * bar_len + "░" * (10 - bar_len)
+            right_text.append(f"  {lang:<12} {bar} {pct:.1f}%\n", style="cyan")
+    else:
+        right_text.append("  Tidak ada data bahasa.\n", style="grey70")
         
     # Active Hours Bar Chart
-    right_text.append("\nPola Waktu Kontribusi (Waktu Aktif):\n", style="bold white")
+    right_text.append("\nPola Waktu Kontribusi:\n", style="bold white")
     for cat, pct in hour_percentages.items():
         bar_len = int(pct / 10)
         bar = "█" * bar_len + "░" * (10 - bar_len)
@@ -240,17 +303,77 @@ def render_tui(profile, sorted_langs, activity_counter, hour_percentages, sorted
         
     stats_panel = Panel(
         right_text,
-        title="[bold white]Analitik Pengkodean[/bold white]",
+        title="[bold white]Analitik Bahasa & Waktu[/bold white]",
         border_style="magenta",
-        height=17
+        box=box.ROUNDED,
+        height=12
     )
     
-    # Print Twin Columns
+    # Print Row 1
     console.print(Columns([profile_panel, stats_panel], expand=True))
     console.print()
     
-    # Activity Breakdown Table
-    table = Table(title="[bold white]100 Aktivitas Terakhir di GitHub[/bold white]", border_style="grey37", expand=True)
+    # Row 2: Weekly Rhythm Panel (Left)
+    weekly_text = Text()
+    weekly_text.append("Ritme Aktivitas Harian (Senin - Minggu):\n", style="bold white")
+    for day, pct in weekday_percentages.items():
+        bar_len = int(pct / 10)
+        bar = "█" * bar_len + "░" * (10 - bar_len)
+        weekly_text.append(f"  {day:<8} {bar} {pct:.1f}%\n", style="green")
+        
+    weekly_panel = Panel(
+        weekly_text,
+        title="[bold white]Ritme Aktivitas Mingguan[/bold white]",
+        border_style="green",
+        box=box.ROUNDED,
+        height=12
+    )
+    
+    # Row 2: Character & Persona Panel (Right)
+    persona_text = Text()
+    persona_text.append("Status Karakter: ", style="bold white")
+    persona_text.append(f"{status}\n\n", style="bold yellow")
+    persona_text.append("Analisis Karakter:\n", style="bold white")
+    persona_text.append(f"\"{persona}\"", style="italic grey78")
+    
+    persona_panel = Panel(
+        persona_text,
+        title="[bold white]Analisis Karakter Developer[/bold white]",
+        border_style="yellow",
+        box=box.ROUNDED,
+        height=12
+    )
+    
+    # Print Row 2
+    console.print(Columns([weekly_panel, persona_panel], expand=True))
+    console.print()
+    
+    # Row 3: Top Repositories Insights Table
+    repo_table = Table(title="[bold white]Repositori Terpopuler & Analisis Keaktifan[/bold white]", border_style="cyan", box=box.ROUNDED, expand=True)
+    repo_table.add_column("Nama Repositori", style="bold cyan", width=30)
+    repo_table.add_column("Bahasa Utama", style="bold white", justify="center")
+    repo_table.add_column("Bintang (Stars)", style="bold yellow", justify="center")
+    repo_table.add_column("Fork", style="bold magenta", justify="center")
+    repo_table.add_column("Status Keaktifan", style="bold green", justify="center")
+    
+    for r in sorted_repos:
+        status_color = "green" if r["activity_status"] == "Sangat Aktif" else ("cyan" if r["activity_status"] == "Aktif" else "grey70")
+        repo_table.add_row(
+            r.get("name"),
+            r.get("language") or "N/A",
+            str(r.get("stargazers_count", 0)),
+            str(r.get("forks_count", 0)),
+            f"[{status_color}]{r['activity_status']}[/{status_color}]"
+        )
+        
+    if not sorted_repos:
+        repo_table.add_row("Tidak ada repositori ditemukan", "N/A", "0", "0", "[grey70]Stabil[/grey70]")
+        
+    console.print(repo_table)
+    console.print()
+    
+    # Row 4: Activity Breakdown Table
+    table = Table(title="[bold white]Distribusi 100 Aktivitas Terakhir di GitHub[/bold white]", border_style="grey37", box=box.ROUNDED, expand=True)
     table.add_column("Jenis Event", style="bold cyan", width=25)
     table.add_column("Jumlah Kejadian", style="bold green", justify="center")
     table.add_column("Deskripsi Aktivitas", style="grey70")
@@ -259,7 +382,7 @@ def render_tui(profile, sorted_langs, activity_counter, hour_percentages, sorted
         "PushEvent": "Melakukan push commit baru ke repositori",
         "PullRequestEvent": "Membuka atau menggabungkan (merge) Pull Request",
         "IssuesEvent": "Membuat, menutup, atau mengomentari Isu bug/tugas",
-        "WatchEvent": "Memberikan bintang (star) pada repositori orang lain",
+        "WatchEvent": "Memberikan bintang (star) pada repositori",
         "CreateEvent": "Membuat repositori atau branch baru",
         "IssueCommentEvent": "Menulis komentar pada laporan isu",
         "PullRequestReviewEvent": "Mengulas (review) kode tim pada PR",
@@ -270,26 +393,163 @@ def render_tui(profile, sorted_langs, activity_counter, hour_percentages, sorted
         table.add_row(ev_type, str(count), desc)
         
     if not activity_counter:
-        table.add_row("No Recent Activity", "0", "Belum ada aktivitas publik terekam dalam beberapa hari ini.")
+        table.add_row("Tidak Ada Aktivitas", "0", "Belum ada aktivitas publik terekam dalam periode ini.")
         
     console.print(table)
     console.print()
+
+
+def render_comparison_tui(userA, statsA, userB, statsB, is_mock):
+    profileA, reposA, eventsA = statsA["profile"], statsA["repos"], statsA["events"]
+    profileB, reposB, eventsB = statsB["profile"], statsB["repos"], statsB["events"]
     
-    # Developer Persona Panel (Bottom)
-    persona_text = Text()
-    persona_text.append("Status Karakter: ", style="bold cyan")
-    persona_text.append(f"{status}\n\n", style="bold yellow")
-    persona_text.append("Analisis Karakter:\n", style="bold white")
-    persona_text.append(f"\"{persona}\"", style="italic grey78")
+    # Calculate stats for A
+    langsA, actA, hourA, weekA, repos_listA = generate_statistics(reposA, eventsA)
+    statusA, personaA = get_developer_persona(actA, hourA)
+    starsA = sum(r.get("stargazers_count", 0) for r in reposA if isinstance(r, dict))
+    forksA = sum(r.get("forks_count", 0) for r in reposA if isinstance(r, dict))
+    top_langA = langsA[0][0] if langsA else "N/A"
+    active_hourA = sorted(hourA.items(), key=lambda x: x[1], reverse=True)[0][0] if hourA else "N/A"
     
-    persona_panel = Panel(
-        persona_text,
-        title="[bold white]Analisis Karakter Developer[/bold white]",
+    # Calculate stats for B
+    langsB, actB, hourB, weekB, repos_listB = generate_statistics(reposB, eventsB)
+    statusB, personaB = get_developer_persona(actB, hourB)
+    starsB = sum(r.get("stargazers_count", 0) for r in reposB if isinstance(r, dict))
+    forksB = sum(r.get("forks_count", 0) for r in reposB if isinstance(r, dict))
+    top_langB = langsB[0][0] if langsB else "N/A"
+    active_hourB = sorted(hourB.items(), key=lambda x: x[1], reverse=True)[0][0] if hourB else "N/A"
+    
+    console.print(Align.center(BANNER))
+    console.print(Align.center(f"[bold cyan]PERBANDINGAN DEVELOPER: @{userA} vs @{userB}[/bold cyan]"))
+    if is_mock:
+        console.print(Align.center("[bold yellow][MODE DEMO - DATA MOCK][/bold yellow]"))
+    console.print()
+    
+    # Comparison Table
+    table = Table(border_style="cyan", box=box.ROUNDED, expand=True)
+    table.add_column("Metrik Analisis", style="bold white", width=25)
+    table.add_column(f"@{userA}", style="bold cyan", justify="center")
+    table.add_column(f"@{userB}", style="bold magenta", justify="center")
+    
+    def format_row(valA, valB, type_val="str"):
+        if type_val == "int":
+            intA, intB = int(valA), int(valB)
+            if intA > intB:
+                return f"[bold green]{valA}[/bold green]", str(valB)
+            elif intB > intA:
+                return str(valA), f"[bold green]{valB}[/bold green]"
+            else:
+                return str(valA), str(valB)
+        else:
+            return str(valA), str(valB)
+            
+    row_nameA, row_nameB = format_row(profileA.get("name") or "N/A", profileB.get("name") or "N/A")
+    table.add_row("Nama Lengkap", row_nameA, row_nameB)
+    
+    row_reposA, row_reposB = format_row(profileA.get("public_repos", 0), profileB.get("public_repos", 0), "int")
+    table.add_row("Repositori Publik", row_reposA, row_reposB)
+    
+    row_follA, row_follB = format_row(profileA.get("followers", 0), profileB.get("followers", 0), "int")
+    table.add_row("Pengikut (Followers)", row_follA, row_follB)
+    
+    table.add_row("Bahasa Utama", top_langA, top_langB)
+    table.add_row("Jam Coding Aktif", active_hourA, active_hourB)
+    table.add_row("Status Karakter", statusA, statusB)
+    
+    row_starsA, row_starsB = format_row(starsA, starsB, "int")
+    table.add_row("Total Bintang (Stars)", row_starsA, row_starsB)
+    
+    row_forksA, row_forksB = format_row(forksA, forksB, "int")
+    table.add_row("Total Fork", row_forksA, row_forksB)
+    
+    console.print(table)
+    console.print()
+    
+    # Verdict Panel
+    scoreA = (1 if profileA.get("public_repos", 0) > profileB.get("public_repos", 0) else 0) + \
+             (1 if profileA.get("followers", 0) > profileB.get("followers", 0) else 0) + \
+             (1 if starsA > starsB else 0)
+    scoreB = (1 if profileB.get("public_repos", 0) > profileA.get("public_repos", 0) else 0) + \
+             (1 if profileB.get("followers", 0) > profileA.get("followers", 0) else 0) + \
+             (1 if starsB > starsA else 0)
+             
+    if scoreA > scoreB:
+        verdict = f"@{userA} memiliki pengaruh repositori dan jejak sosial yang lebih kuat di GitHub berdasarkan metrik saat ini."
+    elif scoreB > scoreA:
+        verdict = f"@{userB} memimpin perbandingan statistik dengan keunggulan pada kontribusi publik dan keterlibatan komunitas."
+    else:
+        verdict = "Kedua developer memiliki kekuatan yang seimbang dengan keunikan profil coding masing-masing!"
+        
+    verdict_text = Text()
+    verdict_text.append("Analisis Perbandingan:\n", style="bold white")
+    verdict_text.append(f"@{userA} diklasifikasikan sebagai ", style="cyan")
+    verdict_text.append(f"{statusA}", style="bold yellow")
+    verdict_text.append(" sementara ", style="white")
+    verdict_text.append(f"@{userB} ", style="magenta")
+    verdict_text.append("diklasifikasikan sebagai ", style="white")
+    verdict_text.append(f"{statusB}.\n\n", style="bold yellow")
+    verdict_text.append(verdict, style="italic white")
+    
+    verdict_panel = Panel(
+        verdict_text,
+        title="[bold white]Keputusan Analisis Komparatif[/bold white]",
         border_style="yellow",
+        box=box.ROUNDED,
         padding=(1, 2)
     )
-    console.print(persona_panel)
+    console.print(verdict_panel)
     console.print()
+
+
+def export_comparison_report(userA, statsA, userB, statsB):
+    filename = f"{userA}_vs_{userB}_comparison_report.md"
+    
+    profileA, reposA, eventsA = statsA["profile"], statsA["repos"], statsA["events"]
+    profileB, reposB, eventsB = statsB["profile"], statsB["repos"], statsB["events"]
+    
+    langsA, actA, hourA, weekA, repos_listA = generate_statistics(reposA, eventsA)
+    statusA, _ = get_developer_persona(actA, hourA)
+    starsA = sum(r.get("stargazers_count", 0) for r in reposA if isinstance(r, dict))
+    forksA = sum(r.get("forks_count", 0) for r in reposA if isinstance(r, dict))
+    top_langA = langsA[0][0] if langsA else "N/A"
+    active_hourA = sorted(hourA.items(), key=lambda x: x[1], reverse=True)[0][0] if hourA else "N/A"
+    
+    langsB, actB, hourB, weekB, repos_listB = generate_statistics(reposB, eventsB)
+    statusB, _ = get_developer_persona(actB, hourB)
+    starsB = sum(r.get("stargazers_count", 0) for r in reposB if isinstance(r, dict))
+    forksB = sum(r.get("forks_count", 0) for r in reposB if isinstance(r, dict))
+    top_langB = langsB[0][0] if langsB else "N/A"
+    active_hourB = sorted(hourB.items(), key=lambda x: x[1], reverse=True)[0][0] if hourB else "N/A"
+    
+    report = f"""# Laporan Perbandingan Developer GitPulse: @{userA} vs @{userB}
+Dibuat secara otomatis pada {datetime.now().strftime('%d-%m-%Y %H:%M')}.
+
+---
+
+## Tabel Perbandingan Statistik
+
+| Metrik Analisis | @{userA} | @{userB} |
+| :--- | :---: | :---: |
+| **Nama Lengkap** | {profileA.get("name") or "N/A"} | {profileB.get("name") or "N/A"} |
+| **Repositori Publik** | {profileA.get("public_repos", 0)} | {profileB.get("public_repos", 0)} |
+| **Pengikut (Followers)** | {profileA.get("followers", 0)} | {profileB.get("followers", 0)} |
+| **Bahasa Utama** | {top_langA} | {top_langB} |
+| **Jam Coding Aktif** | {active_hourA} | {active_hourB} |
+| **Status Karakter** | {statusA} | {statusB} |
+| **Total Bintang (Stars)** | {starsA} | {starsB} |
+| **Total Fork** | {forksA} | {forksB} |
+
+---
+
+## Analisis Komparatif
+- **@{userA}** tergolong sebagai **{statusA}** dengan total **{starsA}** bintang dan **{profileA.get("public_repos", 0)}** repositori publik.
+- **@{userB}** tergolong sebagai **{statusB}** dengan total **{starsB}** bintang dan **{profileB.get("public_repos", 0)}** repositori publik.
+
+*Laporan dihasilkan menggunakan GitPulse CLI Analyzer.*
+"""
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(report)
+    console.print(f"[bold green]Laporan perbandingan sukses diekspor ke: [underline]{filename}[/underline][/bold green]\n")
 
 
 def export_markdown_report(username, profile, sorted_langs, hour_percentages, sorted_repos, status, persona):
@@ -302,17 +562,39 @@ def export_markdown_report(username, profile, sorted_langs, hour_percentages, so
     if hour_percentages:
         active_hour = sorted(hour_percentages.items(), key=lambda x: x[1], reverse=True)[0][0]
 
-    card = f"""+-------------------------------------------------------------+
+    # Style 1: Modern Single Line Box
+    card_double = f"""┌─────────────────────────────────────────────────────────────┐
+│                         GITPULSE                            │
+│    Analitik Aktivitas & Karakter Developer GitHub           │
+├─────────────────────────────────────────────────────────────┤
+│  Username    : @{username:<43} │
+│  Karakter    : {status:<43} │
+│  Top Bahasa  : {top_lang:<27} ({top_lang_pct:0.1f}%) │
+│  Waktu Aktif : {active_hour:<43} │
+└─────────────────────────────────────────────────────────────┘"""
+
+    # Style 2: Classic Minimalist Box
+    card_minimal = f"""+-------------------------------------------------------------+
 |                         GITPULSE                            |
-|        GitHub Activity Visualizer & Persona Analyzer        |
+|    Analitik Aktivitas & Karakter Developer GitHub           |
 +-------------------------------------------------------------+
 |  Username    : @{username:<43} |
 |  Karakter    : {status:<43} |
-|  Top Language: {top_lang:<27} ({top_lang_pct:0.1f}%) |
+|  Top Bahasa  : {top_lang:<27} ({top_lang_pct:0.1f}%) |
 |  Waktu Aktif : {active_hour:<43} |
 +-------------------------------------------------------------+"""
 
-    report_content = f"""# GitPulse Report - @{username}
+    # Style 3: Solid Block Badges
+    card_badges = f"""===============================================================
+  GITPULSE PROFILE CARD
+===============================================================
+  [Username]   @{username}
+  [Karakter]   {status}
+  [Top Bahasa] {top_lang} ({top_lang_pct:0.1f}%)
+  [Waktu]      {active_hour}
+==============================================================="""
+
+    report_content = f"""# Laporan GitPulse - @{username}
 Laporan Analitik Aktivitas GitHub Otomatis yang Dihasilkan pada {datetime.now().strftime('%d-%m-%Y %H:%M')}.
 
 ---
@@ -320,18 +602,18 @@ Laporan Analitik Aktivitas GitHub Otomatis yang Dihasilkan pada {datetime.now().
 ## Ringkasan Profil
 - **Nama Lengkap:** {profile.get('name') or 'N/A'}
 - **Lokasi:** {profile.get('location') or 'N/A'}
-- **Bio:** {profile.get('bio') or 'No bio provided'}
-- **Followers / Following:** {profile.get('followers')} / {profile.get('following')}
+- **Bio:** {profile.get('bio') or 'Tidak ada bio.'}
+- **Pengikut / Mengikuti:** {profile.get('followers')} / {profile.get('following')}
 - **Repositori Publik:** {profile.get('public_repos')}
 
 ---
 
-## Repositori Terpopuler
+## Repositori Terpopuler & Analisis Keaktifan
 """
     if sorted_repos:
         for idx, r in enumerate(sorted_repos, 1):
             lang_str = f" ({r.get('language')})" if r.get('language') else ""
-            report_content += f"{idx}. **{r.get('name')}**{lang_str}  \n   [Stars: {r.get('stargazers_count', 0)} | Forks: {r.get('forks_count', 0)}]\n"
+            report_content += f"{idx}. **{r.get('name')}**{lang_str}  \n   [Stars: {r.get('stargazers_count', 0)} | Forks: {r.get('forks_count', 0)} | Status: {r['activity_status']}]\n"
     else:
         report_content += "Tidak ada repositori publik ditemukan.\n"
 
@@ -360,20 +642,31 @@ Laporan Analitik Aktivitas GitHub Otomatis yang Dihasilkan pada {datetime.now().
 
 ## Analisis Karakter Developer
 - **Status Karakter:** **{status}**
-- **Deskripsi Karakter:**  
+- **Deskripsi Analisis:**  
   *"{persona}"*
 
 ---
 
-## TUI Badge Card (Copy-Paste ke Profile README Anda)
-Meningkatkan profil GitHub Anda dengan menyalin ASCII Card di bawah ini langsung ke file `README.md` Anda:
+## Kartu ASCII Profil (Salin ke Profile README Anda)
+Pilih gaya kartu ASCII di bawah ini untuk mempercantik profil README GitHub Anda:
 
+### Gaya 1: Box Border Modern
 ```text
-{card}
+{card_double}
+```
+
+### Gaya 2: Box Border Klasik Minimalis
+```text
+{card_minimal}
+```
+
+### Gaya 3: Solid Block Badges
+```text
+{card_badges}
 ```
 
 ---
-*Dibuat menggunakan GitPulse CLI Tool*
+*Dibuat menggunakan Alat CLI GitPulse*
 """
     
     with open(filename, "w", encoding="utf-8") as f:
@@ -385,18 +678,21 @@ Meningkatkan profil GitHub Anda dengan menyalin ASCII Card di bawah ini langsung
 def main():
     parser = argparse.ArgumentParser(description="GitPulse - GitHub Activity Visualizer & Persona Analyzer")
     parser.add_argument("-u", "--username", type=str, help="Username GitHub yang ingin dianalisis")
-    parser.add_argument("-t", "--token", type=str, help="GitHub Personal Access Token (opsional, untuk menghindari rate limit)")
+    parser.add_argument("-t", "--token", type=str, help="GitHub Personal Access Token (opsional)")
     parser.add_argument("-m", "--mock", action="store_true", help="Gunakan Demo Mock Data untuk uji coba instan")
+    parser.add_argument("-c", "--compare", nargs=2, metavar=("USER1", "USER2"), help="Bandingkan dua username GitHub secara berdampingan")
     
     args = parser.parse_args()
     
     # Elegant interactive prompt menu if run without arguments
-    if not args.username and not args.mock:
+    if not args.username and not args.mock and not args.compare:
         console.print(Align.center(BANNER))
-        console.print("[bold yellow]Pilih Metode Menjalankan:[/bold yellow]")
-        console.print("  [1] Masukkan Username GitHub secara interaktif")
-        console.print("  [2] Gunakan Demo Mock Data (Uji Coba Instan)")
-        choice = Prompt.ask("\nPilih opsi", choices=["1", "2"], default="1")
+        console.print("[bold yellow]METODE EKSEKUSI GITPULSE[/bold yellow]")
+        console.print("  [1] Analisis Akun Tunggal (Real-time API)")
+        console.print("  [2] Bandingkan Dua Akun (Compare Mode)")
+        console.print("  [3] Uji Coba Demo Instan (Mock Mode)")
+        console.print("  [4] Keluar")
+        choice = Prompt.ask("\nPilih opsi", choices=["1", "2", "3", "4"], default="1")
         
         if choice == "1":
             username = Prompt.ask("\n[bold cyan]Masukkan Username GitHub[/bold cyan]")
@@ -404,31 +700,71 @@ def main():
                 console.print("[bold red]Error: Username tidak boleh kosong![/bold red]")
                 sys.exit(1)
             args.username = username.strip()
-        else:
+        elif choice == "2":
+            user1 = Prompt.ask("\n[bold cyan]Masukkan Username GitHub Pertama[/bold cyan]")
+            user2 = Prompt.ask("[bold magenta]Masukkan Username GitHub Kedua[/bold magenta]")
+            if not user1.strip() or not user2.strip():
+                console.print("[bold red]Error: Username tidak boleh kosong![/bold red]")
+                sys.exit(1)
+            args.compare = [user1.strip(), user2.strip()]
+        elif choice == "3":
             args.mock = True
+        else:
+            console.print("[bold white]Keluar dari GitPulse. Sampai jumpa![/bold white]")
+            sys.exit(0)
             
-    if args.mock:
+    if args.compare:
+        user1, user2 = args.compare
+        if args.mock or (user1.lower() == "ivankafi03" and user2.lower() == "rivaldi01"):
+            stats1 = {"profile": MOCK_PROFILE, "repos": MOCK_REPOS, "events": MOCK_EVENTS}
+            stats2 = {"profile": MOCK_PROFILE_B, "repos": MOCK_REPOS_B, "events": MOCK_EVENTS_B}
+            is_mock = True
+        else:
+            is_mock = False
+            # Fetch with API
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                transient=True
+            ) as progress:
+                progress.add_task(description=f"Menghubungi API GitHub untuk @{user1}...", total=None)
+                profile1, repos1, events1, mock_triggered1 = fetch_github_data(user1, args.token)
+                
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                transient=True
+            ) as progress:
+                progress.add_task(description=f"Menghubungi API GitHub untuk @{user2}...", total=None)
+                profile2, repos2, events2, mock_triggered2 = fetch_github_data(user2, args.token)
+                
+            stats1 = {"profile": profile1, "repos": repos1, "events": events1}
+            stats2 = {"profile": profile2, "repos": repos2, "events": events2}
+            is_mock = mock_triggered1 or mock_triggered2
+            
+        render_comparison_tui(user1, stats1, user2, stats2, is_mock)
+        export_comparison_report(user1, stats1, user2, stats2)
+        
+    elif args.mock:
         profile, repos, events, is_mock = MOCK_PROFILE, MOCK_REPOS, MOCK_EVENTS, True
+        sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos = generate_statistics(repos, events)
+        status, persona = get_developer_persona(activity_counter, hour_percentages)
+        render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos, status, persona, is_mock)
+        export_markdown_report(profile["login"], profile, sorted_langs, hour_percentages, sorted_repos, status, persona)
+        
     else:
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             transient=True
         ) as progress:
-            progress.add_task(description="Menghubungi API GitHub dan menarik data...", total=None)
+            progress.add_task(description=f"Menghubungi API GitHub untuk @{args.username}...", total=None)
             profile, repos, events, is_mock = fetch_github_data(args.username, args.token)
             
-    # Process Stats
-    sorted_langs, activity_counter, hour_percentages, sorted_repos = generate_statistics(repos, events)
-    
-    # Process Persona
-    status, persona = get_developer_persona(activity_counter, hour_percentages)
-    
-    # Render Dashboard
-    render_tui(profile, sorted_langs, activity_counter, hour_percentages, sorted_repos, status, persona, is_mock)
-    
-    # Export Report
-    export_markdown_report(profile["login"], profile, sorted_langs, hour_percentages, sorted_repos, status, persona)
+        sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos = generate_statistics(repos, events)
+        status, persona = get_developer_persona(activity_counter, hour_percentages)
+        render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos, status, persona, is_mock)
+        export_markdown_report(profile["login"], profile, sorted_langs, hour_percentages, sorted_repos, status, persona)
 
 
 if __name__ == "__main__":
