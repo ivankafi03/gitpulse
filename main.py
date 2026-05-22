@@ -439,9 +439,9 @@ def render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekda
     grid_text = Text()
     grid_text.append(f"{month_row}\n", style="bold white")
     for r in grid_rows:
-        grid_text.append(f"{r}\n")
+        grid_text.append(Text.from_markup(f"{r}\n"))
     legend = "\n      Skala Kontribusi: [grey37]░[/grey37] 0 | [cyan]▒[/cyan] 1-2 | [bold cyan]▓[/bold cyan] 3-5 | [bold white]█[/bold white] 6+"
-    grid_text.append(legend)
+    grid_text.append(Text.from_markup(legend))
     
     grid_panel = Panel(
         grid_text,
