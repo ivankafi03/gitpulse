@@ -1,6 +1,7 @@
 import argparse
 import sys
-from datetime import datetime
+import re
+from datetime import datetime, date, timedelta
 from collections import Counter
 import requests
 from rich.console import Console
@@ -48,23 +49,34 @@ MOCK_PROFILE = {
     "created_at": "2021-08-15T08:30:00Z",
 }
 
+# Distribute mock events over recent weeks to show a beautiful grid pattern
+MOCK_EVENTS = []
+base_time = datetime.now()
+# We add a variety of commits on different days to make the grid look beautiful
+commit_offsets = [0, 1, 2, 4, 7, 8, 9, 14, 15, 16, 21, 22, 28, 35, 42, 49, 50, 56, 63, 70, 77, 84, 91, 105, 112, 119]
+for idx, offset in enumerate(commit_offsets):
+    event_time = base_time - timedelta(days=offset, hours=idx % 4 + 10)
+    event_str = event_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Add multiple events on some days
+    count = 3 if idx % 5 == 0 else (1 if idx % 2 == 0 else 2)
+    for _ in range(count):
+        MOCK_EVENTS.append({
+            "type": "PushEvent",
+            "created_at": event_str,
+            "payload": {"commits": [{"message": f"feat: update profile and scripts offset {offset}"}]}
+        })
+
+# Other events for breakdown
+MOCK_EVENTS.append({"type": "IssuesEvent", "created_at": (base_time - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ"), "payload": {"action": "opened"}})
+MOCK_EVENTS.append({"type": "PullRequestEvent", "created_at": (base_time - timedelta(days=5)).strftime("%Y-%m-%dT%H:%M:%SZ"), "payload": {"action": "opened"}})
+MOCK_EVENTS.append({"type": "WatchEvent", "created_at": (base_time - timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%SZ")})
+
 MOCK_REPOS = [
     {"name": "undangan-digital", "language": "TypeScript", "stargazers_count": 12, "forks_count": 4, "pushed_at": "2026-05-22T19:20:00Z"},
     {"name": "fikadigi-store", "language": "TypeScript", "stargazers_count": 8, "forks_count": 2, "pushed_at": "2026-05-20T10:00:00Z"},
     {"name": "gitpulse", "language": "Python", "stargazers_count": 5, "forks_count": 1, "pushed_at": "2026-05-22T20:00:00Z"},
     {"name": "python-basics", "language": "Python", "stargazers_count": 2, "forks_count": 0, "pushed_at": "2025-11-15T08:30:00Z"},
     {"name": "simple-portfolio", "language": "HTML", "stargazers_count": 1, "forks_count": 0, "pushed_at": "2024-05-01T12:00:00Z"},
-]
-
-MOCK_EVENTS = [
-    {"type": "PushEvent", "created_at": "2026-05-22T15:15:00Z", "payload": {"commits": [{"message": "feat: add dynamic sitemap and robots.txt"}]}},
-    {"type": "PushEvent", "created_at": "2026-05-22T14:45:00Z", "payload": {"commits": [{"message": "design: align member login with premium glassmorphism theme"}]}},
-    {"type": "PushEvent", "created_at": "2026-05-22T13:20:00Z", "payload": {"commits": [{"message": "fix: resolve pre-hydration logo layout flash"}]}},
-    {"type": "PushEvent", "created_at": "2026-05-21T02:10:00Z", "payload": {"commits": [{"message": "refactor: optimize nodemailer transport tls config"}]}},
-    {"type": "PushEvent", "created_at": "2026-05-20T22:30:00Z", "payload": {"commits": [{"message": "feat: complete invitation email flow"}]}},
-    {"type": "IssuesEvent", "created_at": "2026-05-19T15:30:00Z", "payload": {"action": "opened"}},
-    {"type": "PullRequestEvent", "created_at": "2026-05-18T10:15:00Z", "payload": {"action": "opened"}},
-    {"type": "WatchEvent", "created_at": "2026-05-17T14:20:00Z"},
 ]
 
 # MOCK DATA FOR USER B (rivaldi01) - For Compare Mode Offline Demo
@@ -86,13 +98,19 @@ MOCK_REPOS_B = [
     {"name": "redis-caching-layer", "language": "Go", "stargazers_count": 5, "forks_count": 1, "pushed_at": "2025-12-15T15:00:00Z"},
 ]
 
-MOCK_EVENTS_B = [
-    {"type": "PushEvent", "created_at": "2026-05-22T21:00:00Z", "payload": {"commits": [{"message": "fix: resolve grpc interceptor context propagation"}]}},
-    {"type": "PullRequestEvent", "created_at": "2026-05-21T08:30:00Z", "payload": {"action": "opened"}},
-    {"type": "IssuesEvent", "created_at": "2026-05-20T14:15:00Z", "payload": {"action": "opened"}},
-    {"type": "PushEvent", "created_at": "2026-05-19T23:30:00Z", "payload": {"commits": [{"message": "feat: integrate prometheus metrics"}]}},
-    {"type": "PushEvent", "created_at": "2026-05-19T22:45:00Z", "payload": {"commits": [{"message": "refactor: simplify redis connection pool"}]}},
-]
+MOCK_EVENTS_B = []
+for idx, offset in enumerate(commit_offsets):
+    event_time = base_time - timedelta(days=offset + 2, hours=idx % 3 + 9)
+    event_str = event_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+    MOCK_EVENTS_B.append({
+        "type": "PushEvent",
+        "created_at": event_str,
+        "payload": {"commits": [{"message": f"feat: backend pipeline updates offset {offset}"}]}
+    })
+
+
+def strip_rich_tags(text):
+    return re.sub(r'\[/?.*?\]', '', text)
 
 
 def fetch_github_data(username, token=None):
@@ -212,8 +230,76 @@ def generate_statistics(repos, events):
     return sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos
 
 
+def generate_contribution_grid(events):
+    today = date.today()
+    num_weeks = 20
+    
+    # Calculate starting date aligned to Sunday 20 weeks ago
+    days_to_subtract = num_weeks * 7
+    start_date = today - timedelta(days=days_to_subtract)
+    start_weekday = start_date.weekday()
+    if start_weekday != 6:  # If not Sunday (python weekday: Mon=0...Sun=6)
+        start_date = start_date - timedelta(days=start_weekday + 1)
+        
+    grid = [[0 for _ in range(num_weeks)] for _ in range(7)]
+    
+    # Parse event dates and count contributions
+    for e in events:
+        try:
+            created_at_str = e.get("created_at")
+            if not created_at_str:
+                continue
+            event_dt = datetime.strptime(created_at_str, "%Y-%m-%dT%H:%M:%SZ").date()
+            diff_days = (event_dt - start_date).days
+            if diff_days >= 0:
+                col = diff_days // 7
+                row = diff_days % 7
+                if 0 <= col < num_weeks and 0 <= row < 7:
+                    grid[row][col] += 1
+        except Exception:
+            continue
+            
+    # Visual String Generation
+    weekdays_labels = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"]
+    indonesian_months = {
+        1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "Mei", 6: "Jun",
+        7: "Jul", 8: "Agu", 9: "Sep", 10: "Okt", 11: "Nov", 12: "Des"
+    }
+    
+    month_labels = [" " * 6]
+    last_month = None
+    for col in range(num_weeks):
+        col_date = start_date + timedelta(days=col * 7)
+        month_name = indonesian_months[col_date.month]
+        if month_name != last_month:
+            current_len = len("".join(month_labels))
+            target_pos = 6 + col * 2
+            if target_pos > current_len:
+                month_labels.append(" " * (target_pos - current_len))
+            month_labels.append(month_name)
+            last_month = month_name
+            
+    month_row = "".join(month_labels)[:num_weeks * 2 + 6]
+    
+    grid_rows = []
+    for r in range(7):
+        row_str = f"  {weekdays_labels[r]:<4} "
+        for c in range(num_weeks):
+            count = grid[r][c]
+            if count == 0:
+                row_str += "[grey37]░[/grey37] "
+            elif count <= 2:
+                row_str += "[cyan]▒[/cyan] "
+            elif count <= 5:
+                row_str += "[bold cyan]▓[/bold cyan] "
+            else:
+                row_str += "[bold white]█[/bold white] "
+        grid_rows.append(row_str)
+        
+    return month_row, grid_rows
+
+
 def get_developer_persona(activity_counter, hour_percentages):
-    # Calculate Night owl percentage
     night_pct = hour_percentages.get("Malam (22-05)", 0)
     morning_pct = hour_percentages.get("Pagi (05-11)", 0)
     
@@ -245,7 +331,7 @@ def get_developer_persona(activity_counter, hour_percentages):
     return status, persona
 
 
-def render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos, status, persona, is_mock):
+def render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos, status, persona, is_mock, events):
     # Header Banner
     console.print(Align.center(BANNER))
     if is_mock:
@@ -348,7 +434,26 @@ def render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekda
     console.print(Columns([weekly_panel, persona_panel], expand=True))
     console.print()
     
-    # Row 3: Top Repositories Insights Table
+    # Row 3: Contribution Calendar Grid Panel (Full Width)
+    month_row, grid_rows = generate_contribution_grid(events)
+    grid_text = Text()
+    grid_text.append(f"{month_row}\n", style="bold white")
+    for r in grid_rows:
+        grid_text.append(f"{r}\n")
+    legend = "\n      Skala Kontribusi: [grey37]░[/grey37] 0 | [cyan]▒[/cyan] 1-2 | [bold cyan]▓[/bold cyan] 3-5 | [bold white]█[/bold white] 6+"
+    grid_text.append(legend)
+    
+    grid_panel = Panel(
+        grid_text,
+        title="[bold white]Kalender Kontribusi GitHub (20 Minggu Terakhir)[/bold white]",
+        border_style="green",
+        box=box.ROUNDED,
+        padding=(1, 2)
+    )
+    console.print(grid_panel)
+    console.print()
+    
+    # Row 4: Top Repositories Insights Table
     repo_table = Table(title="[bold white]Repositori Terpopuler & Analisis Keaktifan[/bold white]", border_style="cyan", box=box.ROUNDED, expand=True)
     repo_table.add_column("Nama Repositori", style="bold cyan", width=30)
     repo_table.add_column("Bahasa Utama", style="bold white", justify="center")
@@ -372,7 +477,7 @@ def render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekda
     console.print(repo_table)
     console.print()
     
-    # Row 4: Activity Breakdown Table
+    # Row 5: Activity Breakdown Table
     table = Table(title="[bold white]Distribusi 100 Aktivitas Terakhir di GitHub[/bold white]", border_style="grey37", box=box.ROUNDED, expand=True)
     table.add_column("Jenis Event", style="bold cyan", width=25)
     table.add_column("Jumlah Kejadian", style="bold green", justify="center")
@@ -552,7 +657,7 @@ Dibuat secara otomatis pada {datetime.now().strftime('%d-%m-%Y %H:%M')}.
     console.print(f"[bold green]Laporan perbandingan sukses diekspor ke: [underline]{filename}[/underline][/bold green]\n")
 
 
-def export_markdown_report(username, profile, sorted_langs, hour_percentages, sorted_repos, status, persona):
+def export_markdown_report(username, profile, sorted_langs, hour_percentages, sorted_repos, status, persona, events):
     filename = f"{username}_gitpulse_report.md"
     
     # Calculate values for copy-paste TUI badge card
@@ -561,6 +666,13 @@ def export_markdown_report(username, profile, sorted_langs, hour_percentages, so
     active_hour = "N/A"
     if hour_percentages:
         active_hour = sorted(hour_percentages.items(), key=lambda x: x[1], reverse=True)[0][0]
+
+    # Generate flat clean contribution grid text for markdown
+    month_row, grid_rows = generate_contribution_grid(events)
+    clean_month_row = strip_rich_tags(month_row)
+    clean_grid_rows = [strip_rich_tags(r) for r in grid_rows]
+    
+    grid_markdown_block = f"{clean_month_row}\n" + "\n".join(clean_grid_rows)
 
     # Style 1: Modern Single Line Box
     card_double = f"""┌─────────────────────────────────────────────────────────────┐
@@ -605,6 +717,13 @@ Laporan Analitik Aktivitas GitHub Otomatis yang Dihasilkan pada {datetime.now().
 - **Bio:** {profile.get('bio') or 'Tidak ada bio.'}
 - **Pengikut / Mengikuti:** {profile.get('followers')} / {profile.get('following')}
 - **Repositori Publik:** {profile.get('public_repos')}
+
+---
+
+## Kalender Kontribusi (20 Minggu Terakhir)
+```text
+{grid_markdown_block}
+```
 
 ---
 
@@ -749,8 +868,8 @@ def main():
         profile, repos, events, is_mock = MOCK_PROFILE, MOCK_REPOS, MOCK_EVENTS, True
         sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos = generate_statistics(repos, events)
         status, persona = get_developer_persona(activity_counter, hour_percentages)
-        render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos, status, persona, is_mock)
-        export_markdown_report(profile["login"], profile, sorted_langs, hour_percentages, sorted_repos, status, persona)
+        render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos, status, persona, is_mock, events)
+        export_markdown_report(profile["login"], profile, sorted_langs, hour_percentages, sorted_repos, status, persona, events)
         
     else:
         with Progress(
@@ -763,8 +882,8 @@ def main():
             
         sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos = generate_statistics(repos, events)
         status, persona = get_developer_persona(activity_counter, hour_percentages)
-        render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos, status, persona, is_mock)
-        export_markdown_report(profile["login"], profile, sorted_langs, hour_percentages, sorted_repos, status, persona)
+        render_tui(profile, sorted_langs, activity_counter, hour_percentages, weekday_percentages, sorted_repos, status, persona, is_mock, events)
+        export_markdown_report(profile["login"], profile, sorted_langs, hour_percentages, sorted_repos, status, persona, events)
 
 
 if __name__ == "__main__":
